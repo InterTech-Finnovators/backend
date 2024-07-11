@@ -6,4 +6,4 @@ Projeyi çalıştırmadan önce yapılması gereken ayarlardan biri de .env dosy
 
 #Projenin Çalıştırılması
 
-Projeyi çalıştırmak içöin terminalde "fastapi dev run" komutu yeterlidir. Diğer bir yöntem ise "uvicorn app:app --reload" komutudur
+Projeyi çalıştırmak içöin terminalde "python -m uvicorn main:app --reload" komutu yeterlidir.
