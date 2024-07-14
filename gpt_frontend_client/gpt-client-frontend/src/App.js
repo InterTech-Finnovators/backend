@@ -1,13 +1,20 @@
 import logo from './image.png';
 import './normalize.css';
 import './App.css';
+import LoginRegister from './Components/LoginRegister/LoginRegister';
 
 function App() {
   return (
+   
+    
     <div className="App">
+       <div>
+        <LoginRegister/>
+      </div>
+      
       <aside className="sideMenu">
         <div className="sideMenuButton">
-          +   Yeni LiterAI
+          + New FinLitAI
         </div>
       </aside>
 
@@ -36,6 +43,7 @@ function App() {
 
         </div>
 
+
         <div className="chatInputBar">
           <textarea className="ChatInputWriteHere"
             rows="1"
@@ -43,9 +51,12 @@ function App() {
           </textarea>
         </div>
         <p className="warningMessage">
-          LiterAI bir Finnovator botudur ve hata yapabilir!
+          FinLitAI bir Finnovator botudur ve hata yapabilir!
         </p>
       </section>
+
+  
+
     </div>
   );
 }
