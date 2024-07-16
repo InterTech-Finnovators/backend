@@ -4,7 +4,7 @@ from settings import settings
 # Register a new user
 register_url = f"http://{settings.host}:{settings.port}/register"
 register_payload = {
-    "username": "testuser2",
+    "username": "atakan",
     "password": "testpassword"
 }
 register_headers = {"Content-Type": "application/json"}
@@ -16,7 +16,7 @@ print(f"Register Response: {register_response.json()}")
 # Obtain a token
 token_url = f"http://{settings.host}:{settings.port}/token"
 token_payload = {
-    "username": "testuser2",
+    "username": "atakan",
     "password": "testpassword"
 }
 token_headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -33,9 +33,15 @@ if not token:
     print("Token not found in the response.")
     exit()
 
-# Chat endpoint'ine istek gönderelim
+# Specify a chat ID
+chat_id = "chat2"
+
+# Send a request to the chat endpoint
 chat_url = f"http://{settings.host}:{settings.port}/chat"
-chat_payload = {"input": "nasılsın"}
+chat_payload = {
+    "input": "nasılsın",
+    "chat_id": chat_id
+}
 chat_headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {token}"
@@ -51,7 +57,7 @@ except requests.exceptions.JSONDecodeError:
     print("JSON decode error occurred.")
 
 # Get chat history
-history_url = f"http://{settings.host}:{settings.port}/history"
+history_url = f"http://{settings.host}:{settings.port}/history/{chat_id}"
 history_headers = {
     "Authorization": f"Bearer {token}"
 }

@@ -1,15 +1,17 @@
 import json
 import os
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from passlib.context import CryptContext
 from settings import settings
 from fastapi.middleware.cors import CORSMiddleware
 import openai
 import logging
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -29,6 +31,10 @@ client = openai.AzureOpenAI(
     api_key=api_key,
     api_version="2023-08-01-preview"
 )
+
+cred = credentials.Certificate('firebase_key.json')
+default_app = firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 app = FastAPI()
 
@@ -53,6 +59,11 @@ class User(BaseModel):
 
 class Query(BaseModel):
     input: str
+    chat_id: str
+
+class ChatHistory(BaseModel):
+    chat_id: str
+    history: List[dict]
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -65,11 +76,10 @@ def create_access_token(data: dict):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_user(username: str):
-    if os.path.exists("users.json"):
-        with open("users.json", "r") as file:
-            users = json.load(file)
-        if username in users:
-            return users[username]
+    doc_ref = db.collection('users').document(username)
+    doc = doc_ref.get()
+    if doc.exists:
+        return doc.to_dict()
     return None
 
 def verify_token(token: str, credentials_exception):
@@ -92,20 +102,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 @app.post("/register")
 async def register(user: User):
-    if os.path.exists("users.json"):
-        with open("users.json", "r") as file:
-            users = json.load(file)
-    else:
-        users = {}
-
-    if user.username in users:
+    doc_ref = db.collection('users').document(user.username)
+    if doc_ref.get().exists:
         raise HTTPException(status_code=400, detail="Username already registered")
 
     hashed_password = get_password_hash(user.password)
-    users[user.username] = {"username": user.username, "password": hashed_password}
-
-    with open("users.json", "w") as file:
-        json.dump(users, file, indent=4)
+    doc_ref.set({"username": user.username, "password": hashed_password})
 
     return {"msg": "User registered successfully"}
 
@@ -121,12 +123,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": form_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.get("/history")
-async def chat_history(current_user: str = Depends(get_current_user)):
-    if os.path.exists("history.json"):
-        with open("history.json", "r") as file:
-            history = json.load(file)
-        user_history = history.get(current_user, [])
+@app.get("/history/{chat_id}")
+async def chat_history(chat_id: str, current_user: str = Depends(get_current_user)):
+    doc_ref = db.collection('users').document(current_user).collection('chats').document(chat_id)
+    doc = doc_ref.get()
+    if doc.exists:
+        user_history = doc.to_dict().get('history', [])
     else:
         user_history = []
 
@@ -141,19 +143,15 @@ async def get_response(query: Query, current_user: str = Depends(get_current_use
         "response": response
     }
 
-    if os.path.exists("history.json"):
-        with open("history.json", "r") as file:
-            history = json.load(file)
+    doc_ref = db.collection('users').document(current_user).collection('chats').document(query.chat_id)
+    doc = doc_ref.get()
+    if doc.exists:
+        history = doc.to_dict().get('history', [])
     else:
-        history = {}
+        history = []
 
-    if current_user not in history:
-        history[current_user] = []
-
-    history[current_user].append(data)
-
-    with open("history.json", "w") as file:
-        json.dump(history, file, indent=4)
+    history.append(data)
+    doc_ref.set({"history": history})
 
     return {"response": response}
 
@@ -163,10 +161,13 @@ async def process_input(input_text: str) -> str:
     try:
         response = client.chat.completions.create(
             model=deployment,
-            temperature=0.7,
+            temperature=0.15,
             max_tokens=4096,
             top_p=0.95,
             messages=[
+                {
+                    "role": "system", "content": "Sen alanında uzman finansal okuryazarlık eğitmenisin. Finansal okuryazarlık dışında bir soru sorulduğunda sadece şu cevabı vermen gerekir: \"Üzgünüm bu konuda bilgim yok. Lütfen başka bir soru sorunuz.\" Sen bir yatırım danışmanı değilsin. Danışmanlık veya tavsiye istenildiğinde şu cevabı vereceksin: \"Üzgünüm yasalar gereği cevap veremiyorum. Lütfen bu konuda bir uzmana danışınız.\" Basit, anlaşılır ve başlangıç seviyesindeki birine hitap edecek şekilde konuş."
+                },
                 {
                     "role": "user",
                     "content": input_text
