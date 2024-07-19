@@ -4,8 +4,10 @@ from settings import settings
 # Register a new user
 register_url = f"http://{settings.host}:{settings.port}/register"
 register_payload = {
-    "username": "atakan",
-    "password": "testpassword"
+    "username": "emregural",
+    "password": "test",
+    "email": "emre@gmail.com"
+
 }
 register_headers = {"Content-Type": "application/json"}
 
