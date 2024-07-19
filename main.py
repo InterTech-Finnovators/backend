@@ -56,6 +56,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 class User(BaseModel):
     username: str
     password: str
+    email: str
 
 class Query(BaseModel):
     input: str
@@ -105,9 +106,15 @@ async def register(user: User):
     doc_ref = db.collection('users').document(user.username)
     if doc_ref.get().exists:
         raise HTTPException(status_code=400, detail="Username already registered")
+    
+    users_ref = db.collection('users')
+    query=users_ref.where('email', '==', user.email).get()
+    if query:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_password = get_password_hash(user.password)
-    doc_ref.set({"username": user.username, "password": hashed_password})
+
+    doc_ref.set({"username": user.username, "password": hashed_password, "email": user.email})
 
     return {"msg": "User registered successfully"}
 
