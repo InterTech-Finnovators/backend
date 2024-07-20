@@ -4,7 +4,7 @@ import { Button, Input, Dropdown, Menu } from 'antd';
 import { SendOutlined, EllipsisOutlined } from '@ant-design/icons';
 import './normalize.css';
 import './App.css';
-import LoginRegister from './Components/LoginRegister/LoginRegister'; // Correct import path
+import LoginRegister from './Components/LoginRegister/LoginRegister.css'; // Correct import path
 
 // Utility function to get time category
 // Input: timestamp (Date object)
@@ -60,27 +60,39 @@ const MainScreen = () => {
   const [currentSession, setCurrentSession] = useState(null);
   const [currentMessage, setCurrentMessage] = useState("");
 
-  // Function to handle sending a message
-  // Input: none
-  // Process: Checks and processes the current message, then updates sessions accordingly
-  // Output: Updates state with new sessions and clears current message
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (currentMessage.trim() !== "" && !/^[\s\t\n]/.test(currentMessage)) {
       let newSessions = [...sessions];
+      let responseMessage = "";
       if (currentSession === null) {
-        // Create a new session
         const newTitle = getTitleFromMessage(currentMessage);
         const timestamp = new Date();
-        newSessions.push({ messages: [{ text: currentMessage, isUser: true }], title: newTitle, timestamp });
+        const newSession = {
+          messages: [{ text: currentMessage, isUser: true }],
+          title: newTitle,
+          timestamp
+        };
+        newSessions.push(newSession);
         setCurrentSession(newSessions.length - 1);
+
+        // Send the message to the API and get the response
+        responseMessage = await getApiResponse(currentMessage, newSessions.length - 1);
+        newSession.messages.push({ text: responseMessage, isUser: false });
       } else {
-        // Add message to existing session
-        newSessions[currentSession].messages.push({ text: currentMessage, isUser: true });
+        if (newSessions[currentSession]) {
+          newSessions[currentSession].messages.push({ text: currentMessage, isUser: true });
+
+          // Send the message to the API and get the response
+          responseMessage = await getApiResponse(currentMessage, currentSession);
+          newSessions[currentSession].messages.push({ text: responseMessage, isUser: false });
+        }
       }
       setSessions(newSessions);
       setCurrentMessage("");
     }
   };
+
+  
 
   // Function to handle creating a new session
   // Input: none
@@ -145,6 +157,32 @@ const MainScreen = () => {
     return `LiterAI ${maxNumber + 1}`;
   };
 
+  const getApiResponse = async (message, sessionId) => {
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhaG1ldCJ9.oztPDiR-TkEN_i_wqC8K_0j_63Zqmk7y2_EywYMF4n0";
+    try {
+      const response = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${token}'
+        },
+        body: JSON.stringify({
+          input: message,
+          chat_id: 'session-${sessionId}'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error('Error fetching API:', error);
+      return null;
+    }
+  };
   // Function to handle key press (Enter) to send message
   // Input: event (KeyboardEvent)
   // Process: Calls handleSendMessage if Enter key is pressed
@@ -206,20 +244,25 @@ const MainScreen = () => {
   
       <section className="chatBox">
         <div className='chatLog'>
-          {currentSession !== null && sessions[currentSession].messages.map((msg, index) => (
-            <div key={index} className='chatMessage'>
-              <div className='chatMessageAligner'>
-                <div className='avatar'></div>
-                <div className='message'>{msg.text}</div>
-              </div>
-            </div>
-          ))}
           <div className='chatMessageGpt4'>
+              <div className='chatMessageAligner'>
+                <div className='avatarGpt'></div>
+                <div className='message'> 
+                Ask me anything! I am here to help you.
+                </div>
+              </div>
+          </div>
+          
+          {currentSession !== null && sessions[currentSession].messages.map((msg, index) => (
+            <div key={index} className={`chatMessage ${msg.isUser ? '' : 'chatMessageGpt4'}`}>
             <div className='chatMessageAligner'>
-              <div className='avatarGpt'></div>
-              <div className='message'>Gunaydin</div>
+              <div className={msg.isUser ? 'avatar' : 'avatarGpt'}></div>
+              <div className='message'>{msg.text}</div>
             </div>
           </div>
+          ))}
+
+          
         </div>
   
         <div className="chatInputBar">
