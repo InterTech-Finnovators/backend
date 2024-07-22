@@ -6,33 +6,31 @@ function RegisterForm() {
     return (
         <div className="wrapper">
             <div className="form-box register">
-                <form action="">
-                    <h1>Register</h1>
+                <form>
+                    <h1>Create Account</h1>
                     <div className="input-box">
                         <input type="text" placeholder="Username" required />
-                        <i className='bx bxs-user'></i>
+                        <span className="icon"><i className="fas fa-user"></i></span>
                     </div>
                     <div className="input-box">
                         <input type="email" placeholder="Email" required />
-                        <i className='bx bxs-envelope'></i>
+                        <span className="icon"><i className="fas fa-envelope"></i></span>
                     </div>
                     <div className="input-box">
                         <input type="password" placeholder="Password" required />
-                        <i className='bx bxs-lock-alt'></i>
+                        <span className="icon"><i className="fas fa-lock"></i></span>
                     </div>
                     <button type="submit">Register</button>
-                    <div className="login-link">
+                    <div className="register-link">
                         <p>Already have an account? <Link to="/login">Login</Link></p>
                     </div>
                     <div className="footer">
-                        <p>© Finnovators. All rights reserved.</p>
+                        <p>&copy; Finnovators. All rights reserved.</p>
                     </div>
                 </form>
             </div>
         </div>
     );
-
 }
-
 
 export default RegisterForm;

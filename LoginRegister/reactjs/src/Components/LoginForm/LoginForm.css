@@ -7,14 +7,12 @@ body {
     height: 100vh;
     background: url('../Assets/background.jpeg') no-repeat center center;
     background-size: cover;
-    font-family: 'Roboto', sans-serif; 
+    font-family: 'Roboto', sans-serif;
 }
-
-
 
 .wrapper {
     width: 420px;
-    height: 450px;
+    height: auto;
     background: rgba(255, 255, 255, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
@@ -26,12 +24,7 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    transition: height 0.2s ease;
     padding: 20px;
-}
-
-.wrapper.active {
-    height: 520px;
 }
 
 .wrapper .form-box {
@@ -39,30 +32,9 @@ body {
     padding: 40px;
 }
 
-.wrapper .form-box.login {
-    transition: transform 0.18s ease;
-    transform: translateX(0);
-}
-
-.wrapper .active.form-box.login {
-    transition: none;
-    transform: translateX(-400px);
-}
-
-.wrapper .form-box.register {
-    position: absolute;
-    transition: none;
-    transform: translateX(400px);
-}
-
-.wrapper .active.form-box.register {
-    transition: transform 0.18s ease;
-    transform: translateX(0);
-}
-
 form h1 {
     font-size: 36px;
-    font-weight: 700; 
+    font-weight: 700;
     text-align: center;
 }
 
@@ -72,7 +44,7 @@ form h2 {
     text-align: center;
 }
 
-form .input-box {
+.input-box {
     position: relative;
     width: 100%;
     height: 50px;
@@ -89,14 +61,14 @@ form .input-box {
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 40px;
     font-size: 16px;
-    font-weight: 400; 
+    font-weight: 400;
     color: #fff;
     padding: 20px 45px 20px 20px;
 }
 
 .input-box input::placeholder {
     color: #fff;
-    font-weight: 400; 
+    font-weight: 400;
 }
 
 .input-box .icon {
@@ -104,10 +76,10 @@ form .input-box {
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 18px; 
+    font-size: 18px;
 }
 
-form .remember-forgot {
+.remember-forgot {
     display: flex;
     justify-content: space-between;
     font-size: 14.5px;
@@ -128,7 +100,7 @@ form .remember-forgot {
     text-decoration: underline;
 }
 
-form button {
+button {
     width: 100%;
     height: 45px;
     border: none;
@@ -137,12 +109,11 @@ form button {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     font-size: 16px;
-    font-weight: 700; /* Thicker font weight */
-    color: #333;
     font-weight: 700;
+    color: #333;
 }
 
-form .register-link {
+.register-link {
     font-size: 14.5px;
     text-align: center;
     margin: 20px 0 15px;
@@ -158,7 +129,6 @@ form .register-link {
     text-decoration: underline;
 }
 
-/* New styles for the footer */
 .footer {
     text-align: center;
     font-size: 12px;

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './LoginForm.css';
 
 function LoginForm() {
@@ -21,11 +21,11 @@ function LoginForm() {
                         <label>
                             <input type="checkbox" /> Remember me
                         </label>
-                        <a href="#">Forgot password?</a>
+                        <Link to="/forgot-password">Forgot password?</Link>
                     </div>
                     <button type="submit">Login</button>
                     <div className="register-link">
-                        <p>Don't have an account? <a href="/register">Register</a></p>
+                        <p>Don't have an account? <Link to="/register">Register</Link></p>
                     </div>
                     <div className="footer">
                         <p>&copy; Finnovators. All rights reserved.</p>
@@ -35,6 +35,5 @@ function LoginForm() {
         </div>
     );
 }
-
 
 export default LoginForm;
