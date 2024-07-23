@@ -12,6 +12,7 @@ import openai
 import logging
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -119,7 +120,7 @@ async def register(user: User):
         raise HTTPException(status_code=400, detail="Username already registered")
     
     users_ref = db.collection('users')
-    query=users_ref.where('email', '==', user.email).get()
+    query = users_ref.where(filter=FieldFilter('email', '==', user.email)).get()
     if query:
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -127,7 +128,7 @@ async def register(user: User):
 
     doc_ref.set({"username": user.username, "password": hashed_password, "email": user.email})
 
-    return {"msg": "User registered successfully"}
+    return {"msg": "User registered successfully", "success":"True"}
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -140,6 +141,20 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
     access_token = create_access_token(data={"sub": form_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/history")
+async def chat_history(current_user: str = Depends(get_current_user)):
+    user_ref = db.collection('users').document(current_user)
+    chats_ref = user_ref.collection('chats')
+    
+    all_chats = []
+    for chat_doc in chats_ref.stream():
+        chat_data = chat_doc.to_dict()
+        chat_id = chat_doc.id
+        chat_history = chat_data.get('history', [])
+        all_chats.append({"chat_id": chat_id, "history": chat_history})
+    
+    return {"chats": all_chats}
 
 @app.get("/history/{chat_id}")
 async def chat_history(chat_id: str, current_user: str = Depends(get_current_user)):
@@ -192,7 +207,7 @@ async def process_input(input_text: str) -> str:
         response = client.chat.completions.create(
             model=deployment,
             temperature=0.15,
-            max_tokens=4096,
+            max_tokens=2048,
             top_p=0.95,
             messages=[
                 {
