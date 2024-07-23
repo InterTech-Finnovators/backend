@@ -66,6 +66,10 @@ class ChatHistory(BaseModel):
     chat_id: str
     history: List[dict]
 
+class PasswordReset(BaseModel):
+    email: str
+    new_password: str    
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -80,6 +84,13 @@ def get_user(username: str):
     doc_ref = db.collection('users').document(username)
     doc = doc_ref.get()
     if doc.exists:
+        return doc.to_dict()
+    return None
+
+def get_user_by_email(email: str):
+    doc_ref = db.collection('users')
+    query = doc_ref.where('email', '==', email).stream()
+    for doc in query:
         return doc.to_dict()
     return None
 
@@ -161,6 +172,18 @@ async def get_response(query: Query, current_user: str = Depends(get_current_use
     doc_ref.set({"history": history})
 
     return {"response": response}
+
+@app.post("/reset-password")
+async def reset_password(password_reset: PasswordReset):
+    user = get_user_by_email(password_reset.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="Email not found")
+
+    hashed_password = get_password_hash(password_reset.new_password)
+    doc_ref = db.collection('users').document(user["username"])
+    doc_ref.update({"password": hashed_password})
+
+    return {"msg": "Password reset successfully"}
 
 async def process_input(input_text: str) -> str:
     logging.debug(f"Received input: {input_text}")
