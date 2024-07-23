@@ -13,6 +13,7 @@ import logging
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -112,6 +113,9 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     return verify_token(token, credentials_exception)
+
+def remove_doc_references(text):  
+      return re.sub(r'\[doc\d+\]', '', text)  
 
 @app.post("/register")
 async def register(user: User):
@@ -236,7 +240,7 @@ async def process_input(input_text: str) -> str:
 
         logging.debug(f"OpenAI response: {response}")
 
-        return response.choices[0].message.content
+        return remove_doc_references(response.choices[0].message.content)
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing the request.")

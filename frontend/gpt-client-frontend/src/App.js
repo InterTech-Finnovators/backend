@@ -192,7 +192,7 @@ const MainScreen = () => {
     <div className="App">
       <aside className="sideMenu">
         <div className="newSessionButton" onClick={handleNewSession}>
-          + Yeni LiterAI
+          + New LiterAI
         </div>
         {Object.entries(categorizeSessions(sessions)).map(([category, sessionsInCategory]) => (
           <div key={category}>
@@ -236,7 +236,7 @@ const MainScreen = () => {
           <Input.TextArea
             className="ChatInputWriteHere"
             rows={1}
-            placeholder="Buraya Yazabilirsiniz"
+            placeholder="You Can Write Here"
             value={currentMessage}
             onChange={handleInputChange}
             onPressEnter={handleKeyPress}
@@ -250,7 +250,7 @@ const MainScreen = () => {
           />
         </div>
         <p className="warningMessage">
-          LiterAI bir Finnovator botudur ve hata yapabilir!
+         LiterAI is a Finnovator bot and may make mistakes!
         </p>
       </section>
     </div>
