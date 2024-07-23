@@ -4,7 +4,10 @@ import { Button, Input, Dropdown, Menu } from 'antd';
 import { SendOutlined, EllipsisOutlined } from '@ant-design/icons';
 import './normalize.css';
 import './App.css';
-import LoginRegister from './Components/LoginRegister/LoginRegister.css'; // Correct import path
+import LoginForm from './Components/LoginForm/LoginForm'; // Correct import path
+import RegisterForm from './Components/LoginForm/RegisterForm';
+import ForgotPasswordForm from './Components/LoginForm/ForgotPasswordForm';
+
 
 // Utility function to get time category
 // Input: timestamp (Date object)
@@ -158,7 +161,7 @@ const MainScreen = () => {
   };
 
   const getApiResponse = async (message, sessionId) => {
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhaG1ldCJ9.oztPDiR-TkEN_i_wqC8K_0j_63Zqmk7y2_EywYMF4n0";
+    const token = localStorage.getItem('token');
     try {
       const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
@@ -294,9 +297,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginRegister />} />
-        <Route path="/register" element={<LoginRegister />} />
-        <Route path="/" element={<MainScreen />} />
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
+        <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+        <Route path="/chat" element={<MainScreen />} />
+        <Route path="/" element={<LoginForm />} />
       </Routes>
     </Router>
   );
