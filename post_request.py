@@ -9,6 +9,15 @@ register_payload = {
     "email": "emre@gmail.com"
 
 }
+
+# Reset Password
+reset_password_url = f"http://{settings.host}:{settings.port}/reset_password"
+reset_password_payload = {
+    "email": "emre@gmail.com",
+    "new_password": "testpassword"
+}
+
+
 register_headers = {"Content-Type": "application/json"}
 
 register_response = requests.post(register_url, json=register_payload, headers=register_headers)
