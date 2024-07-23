@@ -4,7 +4,9 @@ import { Button, Input, Dropdown, Menu } from 'antd';
 import { SendOutlined, EllipsisOutlined } from '@ant-design/icons';
 import './normalize.css';
 import './App.css';
-import LoginRegister from './Components/LoginRegister/LoginRegister.css'; // Correct import path
+import LoginForm from './Components/LoginForm/LoginForm'; // Correct import path
+import RegisterForm from './Components/LoginForm/RegisterForm';
+import ForgotPasswordForm from './Components/LoginForm/ForgotPasswordForm';
 
 // Utility function to get time category
 // Input: timestamp (Date object)
@@ -92,29 +94,15 @@ const MainScreen = () => {
     }
   };
 
-  
-
-  // Function to handle creating a new session
-  // Input: none
-  // Process: Clears the current message and resets current session
-  // Output: Updates state to reset current session and message
   const handleNewSession = () => {
     setCurrentMessage("");
     setCurrentSession(null);
   };
 
-  // Function to switch between sessions
-  // Input: index (Number)
-  // Process: Sets the current session to the session at the given index
-  // Output: Updates state with the new current session index
   const handleSwitchSession = (index) => {
     setCurrentSession(index);
   };
 
-  // Function to delete a session
-  // Input: index (Number)
-  // Process: Removes the session at the given index and adjusts current session if needed
-  // Output: Updates state with new sessions and adjusts current session index
   const handleDeleteSession = (index) => {
     if (sessions.length === 1) {
       return; // Prevent deleting the last remaining session
@@ -130,10 +118,6 @@ const MainScreen = () => {
     }
   };
 
-  // Function to rename a session
-  // Input: index (Number), newName (String)
-  // Process: Renames the session at the given index if the new name is valid
-  // Output: Updates state with the renamed session
   const handleRenameSession = (index, newName) => {
     if (newName.trim() !== "" && !/^[\s\t\n]*$/.test(newName)) {
       const newSessions = [...sessions];
@@ -142,10 +126,6 @@ const MainScreen = () => {
     }
   };
 
-  // Function to generate a unique session title
-  // Input: sessions (Array of session objects)
-  // Process: Finds the highest number in existing session titles and increments it
-  // Output: New unique session title (String)
   const generateUniqueSessionTitle = (sessions) => {
     const existingNumbers = sessions
       .map(session => session.title)
@@ -158,17 +138,17 @@ const MainScreen = () => {
   };
 
   const getApiResponse = async (message, sessionId) => {
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhaG1ldCJ9.oztPDiR-TkEN_i_wqC8K_0j_63Zqmk7y2_EywYMF4n0";
+    const token = localStorage.getItem('token');
     try {
       const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           input: message,
-          chat_id: 'session-${sessionId}'
+          chat_id: `session-${sessionId}`
         })
       });
 
@@ -183,20 +163,13 @@ const MainScreen = () => {
       return null;
     }
   };
-  // Function to handle key press (Enter) to send message
-  // Input: event (KeyboardEvent)
-  // Process: Calls handleSendMessage if Enter key is pressed
-  // Output: none
+
   const handleKeyPress = (event) => {
     if (event.key === "Enter") {
       handleSendMessage();
     }
   };
 
-  // Function to handle input change for the message
-  // Input: e (Event)
-  // Process: Updates currentMessage state if input is valid
-  // Output: Updates state with the new message input value
   const handleInputChange = (e) => {
     const value = e.target.value;
     if (!/^[\s\t\n]/.test(value)) {
@@ -204,10 +177,6 @@ const MainScreen = () => {
     }
   };
 
-  // Menu for session options (Rename, Delete)
-  // Input: index (Number)
-  // Process: Creates a dropdown menu with options to rename or delete a session
-  // Output: JSX Element representing the menu
   const menu = (index) => (
     <Menu>
       <Menu.Item onClick={() => handleRenameSession(index, prompt("Enter new name").trim())}>
@@ -223,7 +192,7 @@ const MainScreen = () => {
     <div className="App">
       <aside className="sideMenu">
         <div className="newSessionButton" onClick={handleNewSession}>
-          + Yeni LiterAI
+          + New LiterAI
         </div>
         {Object.entries(categorizeSessions(sessions)).map(([category, sessionsInCategory]) => (
           <div key={category}>
@@ -241,35 +210,33 @@ const MainScreen = () => {
           </div>
         ))}
       </aside>
-  
+
       <section className="chatBox">
         <div className='chatLog'>
           <div className='chatMessageGpt4'>
-              <div className='chatMessageAligner'>
-                <div className='avatarGpt'></div>
-                <div className='message'> 
-                Ask me anything! I am here to help you.
-                </div>
-              </div>
-          </div>
-          
-          {currentSession !== null && sessions[currentSession].messages.map((msg, index) => (
-            <div key={index} className={`chatMessage ${msg.isUser ? '' : 'chatMessageGpt4'}`}>
             <div className='chatMessageAligner'>
-              <div className={msg.isUser ? 'avatar' : 'avatarGpt'}></div>
-              <div className='message'>{msg.text}</div>
+              <div className='avatarGpt'></div>
+              <div className='message'> 
+                Ask me anything! I am here to help you.
+              </div>
             </div>
           </div>
-          ))}
 
-          
+          {currentSession !== null && sessions[currentSession] && sessions[currentSession].messages.map((msg, index) => (
+            <div key={index} className={`chatMessage ${msg.isUser ? '' : 'chatMessageGpt4'}`}>
+              <div className='chatMessageAligner'>
+                <div className={msg.isUser ? 'avatar' : 'avatarGpt'}></div>
+                <div className='message'>{msg.text}</div>
+              </div>
+            </div>
+          ))}
         </div>
-  
+
         <div className="chatInputBar">
           <Input.TextArea
             className="ChatInputWriteHere"
             rows={1}
-            placeholder="Buraya Yazabilirsiniz"
+            placeholder="You Can Write Here"
             value={currentMessage}
             onChange={handleInputChange}
             onPressEnter={handleKeyPress}
@@ -283,7 +250,7 @@ const MainScreen = () => {
           />
         </div>
         <p className="warningMessage">
-          LiterAI bir Finnovator botudur ve hata yapabilir!
+         LiterAI is a Finnovator bot and may make mistakes!
         </p>
       </section>
     </div>
@@ -294,9 +261,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginRegister />} />
-        <Route path="/register" element={<LoginRegister />} />
-        <Route path="/" element={<MainScreen />} />
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
+        <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+        <Route path="/chat" element={<MainScreen />} />
+        <Route path="/" element={<LoginForm />} />
       </Routes>
     </Router>
   );

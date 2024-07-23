@@ -9,6 +9,15 @@ register_payload = {
     "email": "emre@gmail.com"
 
 }
+
+# Reset Password
+reset_password_url = f"http://{settings.host}:{settings.port}/reset_password"
+reset_password_payload = {
+    "email": "emre@gmail.com",
+    "new_password": "testpassword"
+}
+
+
 register_headers = {"Content-Type": "application/json"}
 
 register_response = requests.post(register_url, json=register_payload, headers=register_headers)
@@ -34,6 +43,22 @@ token = token_response.json().get("access_token")
 if not token:
     print("Token not found in the response.")
     exit()
+
+# Get All Chats History of User Logged-In
+history_url = f"http://{settings.host}:{settings.port}/history"
+history_headers = {
+    "Authorization": f"Bearer {token}"
+}
+
+history_response = requests.get(history_url, headers=history_headers)
+
+print(f"History Status Code: {history_response.status_code}")
+
+try:
+    print(history_response.json())
+except requests.exceptions.JSONDecodeError:
+    print("JSON decode error occurred.")
+
 
 # Specify a chat ID
 chat_id = "chat2"

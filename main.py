@@ -12,6 +12,8 @@ import openai
 import logging
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -40,7 +42,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,6 +68,10 @@ class ChatHistory(BaseModel):
     chat_id: str
     history: List[dict]
 
+class PasswordReset(BaseModel):
+    email: str
+    new_password: str    
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -80,6 +86,13 @@ def get_user(username: str):
     doc_ref = db.collection('users').document(username)
     doc = doc_ref.get()
     if doc.exists:
+        return doc.to_dict()
+    return None
+
+def get_user_by_email(email: str):
+    doc_ref = db.collection('users')
+    query = doc_ref.where('email', '==', email).stream()
+    for doc in query:
         return doc.to_dict()
     return None
 
@@ -101,6 +114,9 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     return verify_token(token, credentials_exception)
 
+def remove_doc_references(text):  
+      return re.sub(r'\[doc\d+\]', '', text)  
+
 @app.post("/register")
 async def register(user: User):
     doc_ref = db.collection('users').document(user.username)
@@ -108,7 +124,7 @@ async def register(user: User):
         raise HTTPException(status_code=400, detail="Username already registered")
     
     users_ref = db.collection('users')
-    query=users_ref.where('email', '==', user.email).get()
+    query = users_ref.where(filter=FieldFilter('email', '==', user.email)).get()
     if query:
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -116,7 +132,7 @@ async def register(user: User):
 
     doc_ref.set({"username": user.username, "password": hashed_password, "email": user.email})
 
-    return {"msg": "User registered successfully"}
+    return {"msg": "User registered successfully", "success":"True"}
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -129,6 +145,20 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
     access_token = create_access_token(data={"sub": form_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/history")
+async def chat_history(current_user: str = Depends(get_current_user)):
+    user_ref = db.collection('users').document(current_user)
+    chats_ref = user_ref.collection('chats')
+    
+    all_chats = []
+    for chat_doc in chats_ref.stream():
+        chat_data = chat_doc.to_dict()
+        chat_id = chat_doc.id
+        chat_history = chat_data.get('history', [])
+        all_chats.append({"chat_id": chat_id, "history": chat_history})
+    
+    return {"chats": all_chats}
 
 @app.get("/history/{chat_id}")
 async def chat_history(chat_id: str, current_user: str = Depends(get_current_user)):
@@ -162,6 +192,18 @@ async def get_response(query: Query, current_user: str = Depends(get_current_use
 
     return {"response": response}
 
+@app.post("/reset-password")
+async def reset_password(password_reset: PasswordReset):
+    user = get_user_by_email(password_reset.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="Email not found")
+
+    hashed_password = get_password_hash(password_reset.new_password)
+    doc_ref = db.collection('users').document(user["username"])
+    doc_ref.update({"password": hashed_password})
+
+    return {"msg": "Password reset successfully"}
+
 async def process_input(input_text: str) -> str:
     logging.debug(f"Received input: {input_text}")
     
@@ -169,7 +211,7 @@ async def process_input(input_text: str) -> str:
         response = client.chat.completions.create(
             model=deployment,
             temperature=0.15,
-            max_tokens=4096,
+            max_tokens=2048,
             top_p=0.95,
             messages=[
                 {
@@ -198,7 +240,7 @@ async def process_input(input_text: str) -> str:
 
         logging.debug(f"OpenAI response: {response}")
 
-        return response.choices[0].message.content
+        return remove_doc_references(response.choices[0].message.content)
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing the request.")
