@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Button, Input, Dropdown, Menu } from 'antd';
-import { SendOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { Button, Input, Dropdown, Menu, Avatar } from 'antd';
+import { SendOutlined, EllipsisOutlined, UserOutlined } from '@ant-design/icons';
 import './normalize.css';
 import './App.css';
 import LoginForm from './Components/LoginForm/LoginForm'; // Correct import path
@@ -66,31 +66,33 @@ const MainScreen = () => {
     if (currentMessage.trim() !== "" && !/^[\s\t\n]/.test(currentMessage)) {
       let newSessions = [...sessions];
       let responseMessage = "";
+      const messageToSend = currentMessage;
+      setCurrentMessage(""); // Clear the input bar immediately
+  
       if (currentSession === null) {
-        const newTitle = getTitleFromMessage(currentMessage);
+        const newTitle = getTitleFromMessage(messageToSend);
         const timestamp = new Date();
         const newSession = {
-          messages: [{ text: currentMessage, isUser: true }],
+          messages: [{ text: messageToSend, isUser: true, type: 'chatMessage' }],
           title: newTitle,
           timestamp
         };
         newSessions.push(newSession);
         setCurrentSession(newSessions.length - 1);
-
+  
         // Send the message to the API and get the response
-        responseMessage = await getApiResponse(currentMessage, newSessions.length - 1);
-        newSession.messages.push({ text: responseMessage, isUser: false });
+        responseMessage = await getApiResponse(messageToSend, newSessions.length - 1);
+        newSession.messages.push({ text: responseMessage, isUser: false, type: 'chatMessageGpt4' });
       } else {
         if (newSessions[currentSession]) {
-          newSessions[currentSession].messages.push({ text: currentMessage, isUser: true });
-
+          newSessions[currentSession].messages.push({ text: messageToSend, isUser: true, type: 'chatMessage' });
+  
           // Send the message to the API and get the response
-          responseMessage = await getApiResponse(currentMessage, currentSession);
-          newSessions[currentSession].messages.push({ text: responseMessage, isUser: false });
+          responseMessage = await getApiResponse(messageToSend, currentSession);
+          newSessions[currentSession].messages.push({ text: responseMessage, isUser: false, type: 'chatMessageGpt4' });
         }
       }
       setSessions(newSessions);
-      setCurrentMessage("");
     }
   };
 
@@ -210,28 +212,32 @@ const MainScreen = () => {
           </div>
         ))}
       </aside>
-
+  
       <section className="chatBox">
-        <div className='chatLog'>
-          <div className='chatMessageGpt4'>
-            <div className='chatMessageAligner'>
-              <div className='avatarGpt'></div>
-              <div className='message'> 
+        <div className="chatLog">
+          <div className="chatMessageGpt4">
+            <div className="chatMessageAligner gpt">
+              <div className="avatarGpt"></div>
+              <div className="message">
                 Ask me anything! I am here to help you.
               </div>
             </div>
           </div>
-
+  
           {currentSession !== null && sessions[currentSession] && sessions[currentSession].messages.map((msg, index) => (
-            <div key={index} className={`chatMessage ${msg.isUser ? '' : 'chatMessageGpt4'}`}>
-              <div className='chatMessageAligner'>
-                <div className={msg.isUser ? 'avatar' : 'avatarGpt'}></div>
-                <div className='message'>{msg.text}</div>
+            <div key={index} className={msg.type}>
+              <div className={`chatMessageAligner ${msg.isUser ? 'user' : 'gpt'}`}>
+                {msg.isUser ? (
+                  <Avatar className="avatar" size="large" icon={<UserOutlined />} />
+                ) : (
+                  <div className="avatarGpt"></div>
+                )}
+                <div className="message">{msg.text}</div>
               </div>
             </div>
           ))}
         </div>
-
+  
         <div className="chatInputBar">
           <Input.TextArea
             className="ChatInputWriteHere"
@@ -250,11 +256,11 @@ const MainScreen = () => {
           />
         </div>
         <p className="warningMessage">
-         LiterAI is a Finnovator bot and may make mistakes!
+          LiterAI is a Finnovator bot and may make mistakes!
         </p>
       </section>
     </div>
-  );
+  );  
 };
 
 function App() {

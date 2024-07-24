@@ -76,26 +76,55 @@
   font-size: 0.8em;
 }
 
-.chatBox{
- flex: 1;
- font-size: 0.9em;
- /* border: 1px solid white; */
- background-color: #343541;
- position:relative;
- resize: none; /* Prevent resizing */
+.chatBox {
+  flex: 1;
+  font-size: 0.9em;
+  position: relative;
+  overflow: hidden; /* Prevent overflow */
+  display: flex;
+  flex-direction: column; /* Ensure the chatLog and chatInputBar are stacked vertically */
+}
+
+.chatLog {
+  flex: 1; /* Allow the chatLog to grow and take up available space */
+  overflow-y: auto; /* Add vertical scroll */
+  padding: 24px; /* Add padding for better spacing */
+  margin-bottom: 95px; /* Add margin to make space for the chat input bar */
 }
 
 .chatInputBar {
   display: flex; /* Add this for horizontal alignment */
   align-items: center; /* Center align items vertically */
   padding: 10px;
-  position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 45%;
   background-color: #282c348e; /* Ensure the input bar has a background */
   border-radius: 24px; /* Add rounded corners for the input bar */
+  width: 45%;
+  margin: auto; /* Center the input bar */
+  position: absolute; /* Make the position absolute */
+  bottom: 30px; /* Position the input bar 30px from the bottom */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.sendButton {
+  margin-left: 10px; /* Add some space between input and button */
+  background-color: #61dafb;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 100%; /* Make the button circular */
+}
+
+.warningMessage {
+  padding: 2px;
+  color: white;
+  font-size: 10px;
+  position: absolute;
+  bottom: 5px; /* Ensure this is below the chatInputBar */
+  left: 0;
+  right: 0;
+  bottom:20px;
+  text-align: center;
 }
 
 .ChatInputWriteHere {
@@ -123,25 +152,7 @@
   color: white;
   opacity: 1; /* Ensures the placeholder text is fully opaque */
 }
-.sendButton {
-  margin-left: 10px; /* Add some space between input and button */
-  background-color: #61dafb;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 100%; /* Make the button circular */
-}
 
-.warningMessage {
-  padding: 2px;
-  color: white;
-  font-size: 10px;
-  position: absolute;
-  bottom: 5px; /* Ensure this is below the chatInputBar */
-  left: 0;
-  right: 0;
-  text-align: center;
-}
 
 .image {
   height: 40vmin;
@@ -169,52 +180,65 @@
   color: #61dafb;
 }
 
-.chatLog{
-text-align: left;
-/* ADD padding:24px; AND SEE RESULT */
-}
-
-.chatMessage{
-  padding-left: 40px; 
+.chatMessage {
+  padding-left: 40px;
   padding-right: 40px;
   word-wrap: break-word; /* Ensure long words break to the next line */
   white-space: pre-wrap; /* Preserve whitespace and wrap text */
   max-width: 100%; /* Ensure messages don't overflow the container */
   box-sizing: border-box; /* Include padding in the element's total width and height */
-  background-color: rgba(255,255,255,0.2);
+  background-color: rgba(255, 255, 255, 0.15); /* Background color for user messages */
 }
-
 
 .chatMessageAligner {
   padding: 12px;
-  padding-left: 25px; 
+  padding-left: 25px;
   padding-right: 25px;
   max-width: 600px;
   margin-right: auto;
   margin-left: auto;
   display: flex;
   align-items: flex-start; /* Align items at the start to keep avatars and messages aligned */
-
 }
 
-.avatar {
-  border-radius: 35%;
-  background: white;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0; /* Prevent the avatar from shrinking */
+.chatMessageAligner.user {
+  flex-direction: row-reverse; /* Place user avatar on the right side */
+  justify-content: flex-end; /* Align user messages to the right */
+}
+
+.chatMessageAligner.gpt {
+  flex-direction: row; /* Place GPT avatar on the left side */
+  justify-content: flex-start; /* Align GPT messages to the left */
 }
 
 .message {
-  padding-left: 10px; 
+  padding-left: 10px;
   padding-right: 10px;
   word-wrap: break-word; /* Ensure long words break to the next line */
   white-space: pre-wrap; /* Preserve whitespace and wrap text */
   max-width: 100%; /* Ensure messages don't overflow the container */
   box-sizing: border-box; /* Include padding in the element's total width and height */
   flex: 1; /* Allow the message to take up the remaining space */
+  text-align: left; /* Default text alignment */
 }
 
+.chatMessageAligner.user .message {
+  text-align: right; /* Align user messages to the right */
+}
+
+.avatar {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0; /* Prevent the avatar from shrinking */
+  margin-left: 10px; /* Add margin to the left to separate from the message */
+  background-color:rgb(135, 208, 104);
+}
+
+.chatMessageAligner.user .avatar {
+  margin-left: 0;
+  margin-right: 10px; /* Add margin to the right for user avatar */
+}
 
 .avatarGpt {
   border-radius: 35%;
