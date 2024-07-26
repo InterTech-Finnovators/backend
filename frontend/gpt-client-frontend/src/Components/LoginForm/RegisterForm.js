@@ -13,6 +13,12 @@ function RegisterForm() {
         e.preventDefault();
         setError(null);
 
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters');
+            return;
+        }
+
+
         try {
             const response = await fetch('http://localhost:8000/register', {
                 method: 'POST',
