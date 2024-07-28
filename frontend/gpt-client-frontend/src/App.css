@@ -248,6 +248,25 @@
   height: 40px;
 }
 
+.signOutButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 40px; /* Increased padding for a larger button */
+  border: 1px solid white;
+  border-radius: 4px;
+  text-align: center; /* Center text horizontally */
+  transition: ease 0.5s all;
+  margin: 10px; /* Adjust margin if needed */
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  color: white; /* Set text color to white */
+  width: auto; /* Ensure width is set to auto */
+}
+
+.signOutButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
 
 @keyframes App-logo-spin {
   from {

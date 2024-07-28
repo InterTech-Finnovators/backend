@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import { Button, Input, Dropdown, Menu, Avatar } from 'antd';
 import { SendOutlined, EllipsisOutlined, UserOutlined } from '@ant-design/icons';
 import './normalize.css';
@@ -54,6 +54,26 @@ const getTitleFromMessage = (message) => {
   const words = message.split(" ");
   const title = words.slice(0, 5).join(" ");
   return title.length > 20 ? title.substring(0, 20) + "..." : title;
+};
+
+// SignOutButton Component
+const SignOutButton = () => {
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    localStorage.removeItem('token'); // Remove token from local storage
+    navigate('/login'); // Redirect to login page
+  };
+
+  return (
+    <Button
+      onClick={handleSignOut}
+      style={{ position: 'absolute', top: 10, right: 10, width: '100px' }}
+      className="signOutButton"
+    >
+      Sign Out
+    </Button>
+  );
 };
 
 // MainScreen component
@@ -245,6 +265,7 @@ const MainScreen = () => {
       </aside>
   
       <section className="chatBox">
+        <SignOutButton />
         <div className="chatLog">
           <div className="chatMessageGpt4">
             <div className="chatMessageAligner gpt">
