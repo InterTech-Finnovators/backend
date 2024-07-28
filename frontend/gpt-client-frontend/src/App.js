@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Button, Input, Dropdown, Menu, Avatar } from 'antd';
 import { SendOutlined, EllipsisOutlined, UserOutlined } from '@ant-design/icons';
@@ -61,6 +61,37 @@ const MainScreen = () => {
   const [sessions, setSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
   const [currentMessage, setCurrentMessage] = useState("");
+
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch('http://localhost:8000/history', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setSessions(data.chats.map(chat => ({
+          title: chat.chat_id,
+          messages: chat.history.flatMap(entry => [
+            { text: entry.input, isUser: true, type: 'chatMessage' },
+            { text: entry.response, isUser: false, type: 'chatMessageGpt4' },
+          ]),
+          timestamp: new Date(), // Placeholder, set this appropriately if available
+        })));
+      } catch (error) {
+        console.error('Error fetching chat history:', error);
+      }
+    };
+
+    fetchChatHistory();
+  }, []);
 
   const handleSendMessage = async () => {
     if (currentMessage.trim() !== "" && !/^[\s\t\n]/.test(currentMessage)) {
