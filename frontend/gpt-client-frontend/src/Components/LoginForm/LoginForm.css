@@ -18,7 +18,7 @@ body {
     backdrop-filter: blur(10px);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     border-radius: 10px;
-    color: #fff;
+    color: #2b2b2b;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -62,12 +62,12 @@ form h2 {
     border-radius: 40px;
     font-size: 16px;
     font-weight: 400;
-    color: #fff;
+    color: #2b2b2b;
     padding: 20px 45px 20px 20px;
 }
 
 .input-box input::placeholder {
-    color: #fff;
+    color: #2b2b2b;
     font-weight: 400;
 }
 
@@ -87,12 +87,12 @@ form h2 {
 }
 
 .remember-forgot label input {
-    accent-color: #fff;
+    accent-color: #2b2b2b;
     margin-right: 4px;
 }
 
 .remember-forgot a {
-    color: #fff;
+    color: #2b2b2b;
     text-decoration: none;
 }
 
@@ -120,7 +120,7 @@ button {
 }
 
 .register-link p a {
-    color: #fff;
+    color: #2b2b2b;
     text-decoration: none;
     font-weight: 600;
 }
@@ -133,5 +133,5 @@ button {
     text-align: center;
     font-size: 12px;
     margin-top: 20px;
-    color: #fff;
+    color: #2b2b2b;
 }
