@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import { Button, Input, Dropdown, Menu, Avatar } from 'antd';
-import { SendOutlined, EllipsisOutlined, UserOutlined } from '@ant-design/icons';
+import { SendOutlined, EllipsisOutlined, UserOutlined ,} from '@ant-design/icons';
 import './normalize.css';
 import './App.css';
 import LoginForm from './Components/LoginForm/LoginForm'; // Correct import path
 import RegisterForm from './Components/LoginForm/RegisterForm';
 import ForgotPasswordForm from './Components/LoginForm/ForgotPasswordForm';
+import ReactSwitch from "react-switch";
+
+export const ThemeContext = createContext(null);
+// const [theme, setTheme] = useState('light');
+
+//   const toggleTheme = () => {
+//     setTheme((curr) => (curr === "light" ? "dark" : "light"));
+//   };
 
 // Utility function to get time category
 // Input: timestamp (Date object)
@@ -68,7 +76,7 @@ const SignOutButton = () => {
   return (
     <Button
       onClick={handleSignOut}
-      style={{ position: 'absolute', top: 10, right: 10, width: '100px' }}
+      style={{ position: 'absolute', top: 30, right: 10, width: '100px' }}
       className="signOutButton"
     >
       Sign Out
@@ -76,11 +84,18 @@ const SignOutButton = () => {
   );
 };
 
+
+  
 // MainScreen component
 const MainScreen = () => {
   const [sessions, setSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
   const [currentMessage, setCurrentMessage] = useState("");
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme((curr) => (curr === "light" ? "dark" : "light"));
+  };
 
   useEffect(() => {
     const fetchChatHistory = async () => {
@@ -242,7 +257,8 @@ const MainScreen = () => {
   );
 
   return (
-    <div className="App">
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <div className={`App ${theme}`} id={theme}>
       <aside className="sideMenu">
         <div className="newSessionButton" onClick={handleNewSession}>
           + New LiterAI
@@ -265,7 +281,6 @@ const MainScreen = () => {
       </aside>
   
       <section className="chatBox">
-        <SignOutButton />
         <div className="chatLog">
           <div className="chatMessageGpt4">
             <div className="chatMessageAligner gpt">
@@ -289,6 +304,8 @@ const MainScreen = () => {
             </div>
           ))}
         </div>
+        
+        
   
         <div className="chatInputBar">
           <Input.TextArea
@@ -311,7 +328,13 @@ const MainScreen = () => {
           LiterAI is a Finnovator bot and may make mistakes!
         </p>
       </section>
+      <SignOutButton />
+      <div className="switch">
+          <label> {theme === "light" ? "Light Mode" : "Dark Mode"}</label>
+          <ReactSwitch onChange={toggleTheme} checked={theme === "dark"} />
+        </div>
     </div>
+    </ThemeContext.Provider>
   );  
 };
 

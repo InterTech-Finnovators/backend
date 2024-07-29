@@ -1,7 +1,7 @@
 .App {
   text-align: center;
   display: flex;
-  background-color: #282c34;
+  background-color: #c7bdd7;
   color:white;
   position: absolute;
   top:0;bottom: 0;right:0;left:0;
@@ -11,7 +11,7 @@
   width: 180px;
   padding: 10px;
   /* border:1px solid white; */
-  background-color: #171717;
+  background-color: #a291b5;
 }
 
 .sideMenuButton {
@@ -96,7 +96,7 @@
   display: flex; /* Add this for horizontal alignment */
   align-items: center; /* Center align items vertically */
   padding: 10px;
-  background-color: #282c348e; /* Ensure the input bar has a background */
+  background-color: #a291b59d; /* Ensure the input bar has a background */
   border-radius: 24px; /* Add rounded corners for the input bar */
   width: 45%;
   margin: auto; /* Center the input bar */
@@ -108,12 +108,14 @@
 
 .sendButton {
   margin-left: 10px; /* Add some space between input and button */
-  background-color: #61dafb;
+  background-color: purple;
   color: white;
   border: none;
   cursor: pointer;
   border-radius: 100%; /* Make the button circular */
 }
+
+
 
 .warningMessage {
   padding: 2px;
@@ -177,7 +179,7 @@
 }
 
 .App-link {
-  color: #61dafb;
+  color: purple;
 }
 
 .chatMessage {
@@ -268,6 +270,78 @@
   background-color: rgba(255, 255, 255, 0.3);
 }
 
+#light {
+  background-color: #c7bdd7;
+}
+#light.App{
+  background-color: #c7bdd7;
+}
+#light.sideMenu {
+
+  background-color: #a291b5;
+}
+#light.sideMenuButton {
+ 
+  background-color: #3c35423d;
+}
+#light.sideMenuButton:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+#light.chatInputBar {
+ 
+  background-color: #a291b59d; 
+
+}
+#light.sendButton {
+  
+  background-color: purple;
+  color: white;
+ 
+}
+#light.signOutButton {
+  border: 1px solid white;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: white; 
+}
+#light.signOutButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+#dark {
+  background-color:  #5d5763;
+  
+}
+#dark.App{
+  background-color: #5d5763;
+}
+#dark.sideMenu {
+ 
+  background-color: #3c3542;
+}
+#dark.sideMenuButton {
+ 
+  background-color: #a291b53f;
+}
+#dark.sideMenuButton:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+#dark.chatInputBar {
+ 
+  background-color: #c7bdd7; 
+}
+#dark.sendButton {
+  background-color: white;
+  color: purple;
+}
+#dark.signOutButton {
+  border: 1px solid black;
+  background-color: #c7bdd744;
+  color: black; 
+}
+#dark.signOutButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -276,4 +350,3 @@
     transform: rotate(360deg);
   }
 }
-
