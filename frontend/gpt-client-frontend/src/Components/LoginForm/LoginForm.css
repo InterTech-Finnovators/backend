@@ -84,6 +84,7 @@ form h2 {
     justify-content: space-between;
     font-size: 14.5px;
     margin: -15px 0 15px;
+    margin-left: 90px; /* Adjust the value as needed */
 }
 
 .remember-forgot label input {

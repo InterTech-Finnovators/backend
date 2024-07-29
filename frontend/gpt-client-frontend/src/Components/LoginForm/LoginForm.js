@@ -59,9 +59,9 @@ function LoginForm() {
                         <span className="icon"><i className="fas fa-lock"></i></span>
                     </div>
                     <div className="remember-forgot">
-                        <label>
+                        {/* <label>
                             <input type="checkbox" /> Remember me
-                        </label>
+                        </label> */}
                         <Link to="/forgot-password">Forgot password?</Link>
                     </div>
                     <button type="submit">Login</button>
