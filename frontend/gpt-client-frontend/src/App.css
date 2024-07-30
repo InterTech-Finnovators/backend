@@ -234,7 +234,7 @@
   height: 40px;
   flex-shrink: 0; /* Prevent the avatar from shrinking */
   margin-left: 10px; /* Add margin to the left to separate from the message */
-  background-color:rgb(135, 208, 104);
+  background-color:purple;
 }
 
 .chatMessageAligner.user .avatar {

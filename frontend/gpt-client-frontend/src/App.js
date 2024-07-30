@@ -197,12 +197,12 @@ const MainScreen = () => {
   const generateUniqueSessionTitle = (sessions) => {
     const existingNumbers = sessions
       .map(session => session.title)
-      .filter(title => title.startsWith("LiterAI "))
-      .map(title => parseInt(title.replace("LiterAI ", ""), 10))
+      .filter(title => title.startsWith("FinLitAI "))
+      .map(title => parseInt(title.replace("FinLitAI ", ""), 10))
       .filter(number => !isNaN(number));
 
     const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
-    return `LiterAI ${maxNumber + 1}`;
+    return `FinLitAI ${maxNumber + 1}`;
   };
 
   const getApiResponse = async (message, sessionId) => {
@@ -261,7 +261,7 @@ const MainScreen = () => {
     <div className={`App ${theme}`} id={theme}>
       <aside className="sideMenu">
         <div className="newSessionButton" onClick={handleNewSession}>
-          + New LiterAI
+          + New FinLitAI
         </div>
         {Object.entries(categorizeSessions(sessions)).map(([category, sessionsInCategory]) => (
           <div key={category}>
@@ -325,7 +325,7 @@ const MainScreen = () => {
           />
         </div>
         <p className="warningMessage">
-          LiterAI is a Finnovator bot and may make mistakes!
+          FinLitAI is a Finnovators bot and may make mistakes!
         </p>
       </section>
       <SignOutButton />
