@@ -282,10 +282,10 @@
 }
 #light.sideMenuButton {
  
-  background-color: #3c35423d;
+  
 }
 #light.sideMenuButton:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  
 }
 #light.chatInputBar {
  
@@ -320,10 +320,8 @@
 }
 #dark.sideMenuButton {
  
-  background-color: #a291b53f;
 }
 #dark.sideMenuButton:hover {
-  background-color: rgba(255, 255, 255, 0.2);
 }
 #dark.chatInputBar {
  

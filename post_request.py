@@ -1,5 +1,6 @@
 import requests
 from settings import settings
+import json
 
 # Register a new user
 register_url = f"http://{settings.host}:{settings.port}/register"
@@ -97,3 +98,14 @@ try:
     print(history_response.json())
 except requests.exceptions.JSONDecodeError:
     print("JSON decode error occurred.")
+
+speech_url = "http://localhost:8000/synthesize"
+speech_payload = json.dumps({"text": "Kredi faizi, bir kredi anlaşması kapsamında ödünç alınan paranın kullanımına karşılık olarak borçlunun kredi verene ödediği ek tutardır. Kredi faizi, genellikle yıllık bir oran olarak ifade edilir ve kredi tutarının belirli bir yüzdesi olarak hesaplanır. Kredi faiz oranı, kredi türüne, kredi vadesine, borçlunun kredi notuna ve piyasa koşullarına bağlı olarak değişiklik gösterebilir. Örneğin, bir kredi sözleşmesinde belirlenen faiz oranı %1 ise, gecikme faizi bu oranın %30'undan fazla olamaz, yani en fazla %1,30 olarak uygulanabilir . Ayrıca, kredi ödemelerinde gecikme yaşandığında, yalnızca geciken ana para ödemesi üzerinden gecikme faizi işletilir ."})
+speech_headers = {"Content-Type": "application/json"}
+
+speech_response = requests.post(speech_url, data=speech_payload, headers=speech_headers)
+
+if speech_response.status_code == 200:
+    print(speech_response.json())
+else:
+    print(f"Error: {speech_response.status_code}, {speech_response.text}")

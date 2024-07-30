@@ -259,20 +259,20 @@ const MainScreen = () => {
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
     <div className={`App ${theme}`} id={theme}>
-      <aside className="sideMenu">
-        <div className="newSessionButton" onClick={handleNewSession}>
+      <aside className="sideMenu" id={theme}>
+        <div className="newSessionButton" onClick={handleNewSession }id={theme}>
           + New FinLitAI
         </div>
         {Object.entries(categorizeSessions(sessions)).map(([category, sessionsInCategory]) => (
           <div key={category}>
-            <div className="categoryHeader">{category}</div>
+            <div className="categoryHeader" id={theme}>{category}</div>
             {sessionsInCategory.map((session, index) => (
-              <div key={index} className="sideMenuButton">
-                <span className="sessionName" onClick={() => handleSwitchSession(sessions.indexOf(session))}>
+              <div key={index} className="sideMenuButton"id={theme}>
+                <span className="sessionName" id={theme} onClick={() => handleSwitchSession(sessions.indexOf(session))}>
                   {session.title}
                 </span>
                 <Dropdown overlay={menu(sessions.indexOf(session))} trigger={['click']}>
-                  <Button className="deleteButton" icon={<EllipsisOutlined />} />
+                  <Button className="deleteButton" id={theme} icon={<EllipsisOutlined />} />
                 </Dropdown>
               </div>
             ))}
@@ -285,7 +285,7 @@ const MainScreen = () => {
           <div className="chatMessageGpt4">
             <div className="chatMessageAligner gpt">
               <div className="avatarGpt"></div>
-              <div className="message">
+              <div className="message" id={theme}>
                 Ask me anything! I am here to help you.
               </div>
             </div>
@@ -316,22 +316,25 @@ const MainScreen = () => {
             onChange={handleInputChange}
             onPressEnter={handleKeyPress}
             autoSize={{ minRows: 1, maxRows: 6 }}
+            id={theme}
           />
           <Button
             className="sendButton"
             shape="circle"
             icon={<SendOutlined />}
             onClick={handleSendMessage}
+            id={theme}
           />
         </div>
         <p className="warningMessage">
           FinLitAI is a Finnovators bot and may make mistakes!
         </p>
       </section>
-      <SignOutButton />
-      <div className="switch">
-          <label> {theme === "light" ? "Light Mode" : "Dark Mode"}</label>
+      <SignOutButton id={theme}/>
+      <div className="switch" id={theme}>
+          
           <ReactSwitch onChange={toggleTheme} checked={theme === "dark"} />
+          
         </div>
     </div>
     </ThemeContext.Provider>
