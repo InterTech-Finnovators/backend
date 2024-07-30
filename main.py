@@ -1,20 +1,23 @@
 import json
 import os
-from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import FastAPI, HTTPException, Depends, status, Body, Response, UploadFile, File
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from pydantic import BaseModel
 from typing import Optional, List
-from passlib.context import CryptContext
+import firebase_admin
+from firebase_admin import auth, firestore, credentials
+from google.cloud.firestore_v1.base_query import FieldFilter
 from settings import settings
-from fastapi.middleware.cors import CORSMiddleware
 import openai
 import logging
-import firebase_admin
-from firebase_admin import credentials, firestore
-from google.cloud.firestore_v1.base_query import FieldFilter
 import re
-
+import azure.cognitiveservices.speech as speechsdk
+import traceback
+import bcrypt
+from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
@@ -47,19 +50,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class User(BaseModel):
     username: str
     password: str
     email: str
-
+   
+class Token(BaseModel):
+    username: str
+    password: str
+   
 class Query(BaseModel):
     input: str
     chat_id: str
@@ -70,17 +75,11 @@ class ChatHistory(BaseModel):
 
 class PasswordReset(BaseModel):
     email: str
-    new_password: str    
+    new_password: str
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+def verify_password(pass1, pass2):
+    return pass1 == pass2
 
 def get_user(username: str):
     doc_ref = db.collection('users').document(username)
@@ -89,12 +88,9 @@ def get_user(username: str):
         return doc.to_dict()
     return None
 
-def get_user_by_email(email: str):
-    doc_ref = db.collection('users')
-    query = doc_ref.where('email', '==', email).stream()
-    for doc in query:
-        return doc.to_dict()
-    return None
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str, credentials_exception):
     try:
@@ -112,32 +108,114 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    return verify_token(token, credentials_exception)
+    try:
+        return verify_token(token, credentials_exception)
+    except Exception as e:
+        logging.error(f"Token verification failed: {e}")
+        raise credentials_exception
 
-def remove_doc_references(text):  
-      return re.sub(r'\[doc\d+\]', '', text)  
+def remove_doc_references(text):
+    return re.sub(r'\[doc\d+\]', '', text)
+
+@app.post("/synthesize")
+def synthesize_endpoint(payload: dict = Body(...)):
+    try:
+        text = payload.get("text")
+        if not text:
+            raise HTTPException(status_code=400, detail="Text field is required")
+        audio_filepath = synthesize_speech(text)
+        return {"audio_filepath": audio_filepath}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+speech_key = "38ab1d115cbd4020af61b1662c543641"
+service_region = "eastus"
+speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+speech_config.speech_synthesis_voice_name = "tr-TR-EmelNeural"
+
+"""def synthesize_speech(text: str) -> str:
+    audio_filename = "response.wav"
+    audio_output = speechsdk.audio.AudioOutputConfig(filename=audio_filename)
+    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_output)
+    result = speech_synthesizer.speak_text_async(text).get()
+
+    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+        print("hello")
+        return audio_filename
+    elif result.reason == speechsdk.ResultReason.Canceled:
+        cancellation_details = result.cancellation_details
+        logging.error(f"Speech synthesis canceled: {cancellation_details.reason}")
+        if cancellation_details.reason == speechsdk.CancellationReason.Error:
+            logging.error(f"Error details: {cancellation_details.error_details}")
+        raise HTTPException(status_code=500, detail="Speech synthesis failed")
+"""
+request_counter = 0
+def synthesize_speech(text: str, output_dir: str = "frontend/gpt-client-frontend") -> str:
+    global request_counter
+
+    audio_filename = f"response_{request_counter}.wav"  # Benzersiz dosya adı
+    audio_output_path = os.path.join(output_dir, audio_filename) 
+
+    # Ses çıkış dizininin kontrolü ve gerekirse oluşturulması
+    os.makedirs(output_dir, exist_ok=True)
+
+    audio_output = speechsdk.audio.AudioOutputConfig(filename=audio_output_path)
+    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_output)
+    result = speech_synthesizer.speak_text_async(text).get()
+
+    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+        return audio_output_path  # Tam dosya yolunu döndür
+    elif result.reason == speechsdk.ResultReason.Canceled:
+        cancellation_details = result.cancellation_details
+        logging.error(f"Speech synthesis canceled: {cancellation_details.reason}")
+        if cancellation_details.reason == speechsdk.CancellationReason.Error:
+            logging.error(f"Error details: {cancellation_details.error_details}")
+        raise HTTPException(status_code=500, detail="Speech synthesis failed")
 
 @app.post("/register")
 async def register(user: User):
-    doc_ref = db.collection('users').document(user.username)
-    if doc_ref.get().exists:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    
-    users_ref = db.collection('users')
-    query = users_ref.where(filter=FieldFilter('email', '==', user.email)).get()
-    if query:
+    try:
+        # Hash the password
+        hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
+
+        # Create user in Firebase Authentication
+        user_record = firebase_admin.auth.create_user(
+            email=user.email,
+            password=user.password,
+            display_name=user.username
+        )
+        firebase_admin.auth.generate_email_verification_link(user.email)
+
+        # Store user in Firestore with username as document ID
+        db.collection('users').document(user.username).set({
+            "username": user.username,
+            "email": user.email,
+            "password": user.password,  # Store hashed password
+            "uid": user_record.uid  # Store UID for reference
+        })
+       
+       
+        return {"msg": "User registered successfully", "success": "True"}
+    except firebase_admin.auth.EmailAlreadyExistsError:
         raise HTTPException(status_code=400, detail="Email already registered")
+    except firebase_admin.auth.UidAlreadyExistsError:  
+        raise HTTPException(status_code=400, detail="Username already registered")
+    except Exception as e:
+        logging.error(f"An error occurred during registration: {e}")
+        logging.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="An error occurred during registration")
 
-    hashed_password = get_password_hash(user.password)
 
-    doc_ref.set({"username": user.username, "password": hashed_password, "email": user.email})
-
-    return {"msg": "User registered successfully", "success":"True"}
 
 @app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = get_user(form_data.username)
-    if not user or not verify_password(form_data.password, user["password"]):
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):  
+    """Authenticates the user and returns a Firebase ID token."""
+    current_user = get_user(form_data.username)
+    user = firebase_admin.auth.get_user_by_email(current_user["email"])
+    if not user or not verify_password(form_data.password, current_user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -150,14 +228,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 async def chat_history(current_user: str = Depends(get_current_user)):
     user_ref = db.collection('users').document(current_user)
     chats_ref = user_ref.collection('chats')
-    
+   
     all_chats = []
     for chat_doc in chats_ref.stream():
         chat_data = chat_doc.to_dict()
         chat_id = chat_doc.id
         chat_history = chat_data.get('history', [])
         all_chats.append({"chat_id": chat_id, "history": chat_history})
-    
+   
     return {"chats": all_chats}
 
 @app.get("/history/{chat_id}")
@@ -194,19 +272,24 @@ async def get_response(query: Query, current_user: str = Depends(get_current_use
 
 @app.post("/reset-password")
 async def reset_password(password_reset: PasswordReset):
-    user = get_user_by_email(password_reset.email)
-    if not user:
-        raise HTTPException(status_code=404, detail="Email not found")
+    try:
+        user_ref = db.collection('users').where('email', '==', password_reset.email).limit(1).stream()
+        user_doc = next(user_ref, None)
 
-    hashed_password = get_password_hash(password_reset.new_password)
-    doc_ref = db.collection('users').document(user["username"])
-    doc_ref.update({"password": hashed_password})
-
-    return {"msg": "Password reset successfully"}
+        if user_doc:
+            user_id = user_doc.id
+            db.collection('users').document(user_id).update({
+                "password": password_reset.new_password
+            })
+            return {"msg": "Password reset successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 async def process_input(input_text: str) -> str:
     logging.debug(f"Received input: {input_text}")
-    
+   
     try:
         response = client.chat.completions.create(
             model=deployment,
@@ -247,4 +330,4 @@ async def process_input(input_text: str) -> str:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=settings.host, port=settings.port)
+    uvicorn.run(app, host=settings.host, port=8181)
