@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import { Button, Input, Dropdown, Menu, Avatar } from 'antd';
-import { SendOutlined, EllipsisOutlined, UserOutlined ,} from '@ant-design/icons';
+import { SendOutlined, EllipsisOutlined, UserOutlined , } from '@ant-design/icons';
 import './normalize.css';
 import './App.css';
 import LoginForm from './Components/LoginForm/LoginForm'; // Correct import path
@@ -245,6 +245,12 @@ const MainScreen = () => {
     }
   };
 
+  // Function to handle text-to-speech
+  const handleTextToSpeech = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const menu = (index) => (
     <Menu>
       <Menu.Item onClick={() => handleRenameSession(index, prompt("Enter new name").trim())}>
@@ -258,87 +264,84 @@ const MainScreen = () => {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-    <div className={`App ${theme}`} id={theme}>
-      <aside className="sideMenu" id={theme}>
-        <div className="newSessionButton" onClick={handleNewSession }id={theme}>
-          + New FinLitAI
-        </div>
-        {Object.entries(categorizeSessions(sessions)).map(([category, sessionsInCategory]) => (
-          <div key={category}>
-            <div className="categoryHeader" id={theme}>{category}</div>
-            {sessionsInCategory.map((session, index) => (
-              <div key={index} className="sideMenuButton"id={theme}>
-                <span className="sessionName" id={theme} onClick={() => handleSwitchSession(sessions.indexOf(session))}>
-                  {session.title}
-                </span>
-                <Dropdown overlay={menu(sessions.indexOf(session))} trigger={['click']}>
-                  <Button className="deleteButton" id={theme} icon={<EllipsisOutlined />} />
-                </Dropdown>
+      <div className={`App ${theme}`} id={theme}>
+        <aside className="sideMenu" id={theme}>
+          <div className="newSessionButton" onClick={handleNewSession} id={theme}>
+            + New FinLitAI
+          </div>
+          {Object.entries(categorizeSessions(sessions)).map(([category, sessionsInCategory]) => (
+            <div key={category}>
+              <div className="categoryHeader" id={theme}>{category}</div>
+              {sessionsInCategory.map((session, index) => (
+                <div key={index} className="sideMenuButton" id={theme}>
+                  <span className="sessionName" id={theme} onClick={() => handleSwitchSession(sessions.indexOf(session))}>
+                    {session.title}
+                  </span>
+                  <Dropdown overlay={menu(sessions.indexOf(session))} trigger={['click']}>
+                    <Button className="deleteButton" id={theme} icon={<EllipsisOutlined />} />
+                  </Dropdown>
+                </div>
+              ))}
+            </div>
+          ))}
+        </aside>
+        <section className="chatBox">
+          <div className="chatLog">
+            <div className="chatMessageGpt4">
+              <div className="chatMessageAligner gpt">
+                <div className="avatarGptContainer">
+                  <div className="avatarGpt"
+                  onClick={() => handleTextToSpeech('Ask me anything! I am here to help you.')}></div>
+                </div>
+                <div className="message" id={theme}>
+                  Ask me anything! I am here to help you.
+                </div>
+              </div>
+            </div>
+
+            {currentSession !== null && sessions[currentSession] && sessions[currentSession].messages.map((msg, index) => (
+              <div key={index} className={msg.type}>
+                <div className={`chatMessageAligner ${msg.isUser ? 'user' : 'gpt'}`}>
+                  {msg.isUser ? (
+                    <Avatar className="avatar" size="large" icon={<UserOutlined />} />
+                  ) : (
+                    <div className="avatarGpt" onClick={() => handleTextToSpeech(msg.text)}></div>
+                  )}
+                  <div className="message">{msg.text}</div>
+                </div>
               </div>
             ))}
           </div>
-        ))}
-      </aside>
-  
-      <section className="chatBox">
-        <div className="chatLog">
-          <div className="chatMessageGpt4">
-            <div className="chatMessageAligner gpt">
-              <div className="avatarGpt"></div>
-              <div className="message" id={theme}>
-                Ask me anything! I am here to help you.
-              </div>
-            </div>
+          <div className="chatInputBar">
+            <Input.TextArea
+              className="ChatInputWriteHere"
+              rows={1}
+              placeholder="You Can Write Here"
+              value={currentMessage}
+              onChange={handleInputChange}
+              onPressEnter={handleKeyPress}
+              autoSize={{ minRows: 1, maxRows: 6 }}
+              id={theme}
+            />
+            <Button
+              className="sendButton"
+              shape="circle"
+              icon={<SendOutlined />}
+              onClick={handleSendMessage}
+              id={theme}
+            />
           </div>
-  
-          {currentSession !== null && sessions[currentSession] && sessions[currentSession].messages.map((msg, index) => (
-            <div key={index} className={msg.type}>
-              <div className={`chatMessageAligner ${msg.isUser ? 'user' : 'gpt'}`}>
-                {msg.isUser ? (
-                  <Avatar className="avatar" size="large" icon={<UserOutlined />} />
-                ) : (
-                  <div className="avatarGpt"></div>
-                )}
-                <div className="message">{msg.text}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        
-  
-        <div className="chatInputBar">
-          <Input.TextArea
-            className="ChatInputWriteHere"
-            rows={1}
-            placeholder="You Can Write Here"
-            value={currentMessage}
-            onChange={handleInputChange}
-            onPressEnter={handleKeyPress}
-            autoSize={{ minRows: 1, maxRows: 6 }}
-            id={theme}
-          />
-          <Button
-            className="sendButton"
-            shape="circle"
-            icon={<SendOutlined />}
-            onClick={handleSendMessage}
-            id={theme}
-          />
-        </div>
-        <p className="warningMessage">
-          FinLitAI is a Finnovators bot and may make mistakes!
-        </p>
-      </section>
-      <SignOutButton id={theme}/>
-      <div className="switch" id={theme}>
-          
+          <p className="warningMessage">
+            FinLitAI is a Finnovators bot and may make mistakes!
+          </p>
+        </section>
+        <SignOutButton id={theme} />
+        <div className="switch" id={theme}>
           <ReactSwitch onChange={toggleTheme} checked={theme === "dark"} />
-          
         </div>
-    </div>
+      </div>
     </ThemeContext.Provider>
-  );  
+  );
 };
 
 function App() {

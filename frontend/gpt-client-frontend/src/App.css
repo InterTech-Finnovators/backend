@@ -248,6 +248,7 @@
   background-size: cover;
   width: 40px;
   height: 40px;
+  cursor: pointer;
 }
 
 .signOutButton {
@@ -339,6 +340,8 @@
 #dark.signOutButton:hover {
   background-color: rgba(255, 255, 255, 0.3);
 }
+
+
 
 @keyframes App-logo-spin {
   from {
